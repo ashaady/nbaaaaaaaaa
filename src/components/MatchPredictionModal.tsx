@@ -121,9 +121,10 @@ export function MatchPredictionModal({
 
   // Fetch match prediction (for main analysis: winner, spread, confidence)
   // Endpoint: /predict/match/{homeCode}/{awayCode}
+  // Source A (Header/Scoreboard): Uses team CODES (e.g., "LAL", "BOS")
   const {
     data: prediction,
-    isLoading,
+    isLoading: isPredictionLoading,
     refetch,
     error,
   } = useQuery({
@@ -147,7 +148,11 @@ export function MatchPredictionModal({
 
   // Fetch full match prediction with player data (for player projections in list)
   // Endpoint: /predict/full-match/{homeId}/{awayId}
-  const { data: fullPrediction } = useQuery({
+  // Source B (Player List): Uses team IDs (integers, e.g., 1610612747)
+  const {
+    data: fullPrediction,
+    isLoading: isPlayersLoading,
+  } = useQuery({
     queryKey: [
       "full-match-prediction",
       homeTeamId,
