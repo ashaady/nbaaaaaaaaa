@@ -91,19 +91,24 @@ export function MatchPredictionModal({
   const [playerModalOpen, setPlayerModalOpen] = useState(false);
   const [modalTeam, setModalTeam] = useState<"home" | "away">("home");
 
-  const homeTeamId = game ? getTeamCode(game.homeTeam) : "";
-  const awayTeamId = game ? getTeamCode(game.awayTeam) : "";
+  // Team codes for predictMatch endpoint (/predict/match/{homeCode}/{awayCode})
+  const homeCode = game ? getTeamCode(game.homeTeam) : "";
+  const awayCode = game ? getTeamCode(game.awayTeam) : "";
+
+  // Team IDs for getFullMatchPrediction endpoint (/predict/full-match/{homeId}/{awayId})
+  const homeTeamId = game?.homeTeamId;
+  const awayTeamId = game?.awayTeamId;
 
   const { data: homeRoster = [] } = useQuery({
-    queryKey: ["team-roster", homeTeamId],
-    queryFn: () => nbaApi.getTeamRoster(homeTeamId),
-    enabled: !!homeTeamId,
+    queryKey: ["team-roster", homeCode],
+    queryFn: () => nbaApi.getTeamRoster(homeCode),
+    enabled: !!homeCode,
   });
 
   const { data: awayRoster = [] } = useQuery({
-    queryKey: ["team-roster", awayTeamId],
-    queryFn: () => nbaApi.getTeamRoster(awayTeamId),
-    enabled: !!awayTeamId,
+    queryKey: ["team-roster", awayCode],
+    queryFn: () => nbaApi.getTeamRoster(awayCode),
+    enabled: !!awayCode,
   });
 
   const homePlayerSearchResults = homeRoster.filter((player) =>
