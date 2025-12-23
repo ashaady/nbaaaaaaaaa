@@ -609,15 +609,15 @@ export const nbaApi = {
   },
 
   async getFullMatchPredictionWithAbsents(
-    homeTeamId: string,
-    awayTeamId: string,
+    homeTeamId: string | number,
+    awayTeamId: string | number,
     homeAbsentIds?: number[],
     awayAbsentIds?: number[]
   ): Promise<InteractiveMatchPrediction> {
     const params = new URLSearchParams();
     params.append("home_rest", "1");
     params.append("away_rest", "1");
-    
+
     if (homeAbsentIds && homeAbsentIds.length > 0) {
       homeAbsentIds.forEach(id => params.append("home_absent", id.toString()));
     }
