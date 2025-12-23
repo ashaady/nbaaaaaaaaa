@@ -521,10 +521,10 @@ export function MatchPredictionModal({
                   />
                 )}
 
-                {homeTeamId && awayTeamId && (
+                {homeCode && awayCode && (
                   <ShootingBattleCard
-                    homeTeamCode={homeTeamId}
-                    awayTeamCode={awayTeamId}
+                    homeTeamCode={homeCode}
+                    awayTeamCode={awayCode}
                     homeMissingPlayers={homeMissingPlayers}
                     awayMissingPlayers={awayMissingPlayers}
                   />
