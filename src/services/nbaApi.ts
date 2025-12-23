@@ -235,8 +235,8 @@ export interface PlayerFullPrediction {
 }
 
 export interface MatchContext {
-  home_usage_boost: number;
-  away_usage_boost: number;
+  home_usage_boost?: number;
+  away_usage_boost?: number;
   home_absent_count?: number;
   away_absent_count?: number;
   status?: string;
@@ -601,9 +601,20 @@ export const nbaApi = {
 
   async getFullMatchPrediction(
     homeTeamId: string | number,
-    awayTeamId: string | number
+    awayTeamId: string | number,
+    homeAbsent: number[] = [],
+    awayAbsent: number[] = [],
+    homeRest: number = 1,
+    awayRest: number = 1
   ): Promise<FullMatchPrediction> {
-    const response = await fetch(`${API_BASE_URL}/predict/full-match/${homeTeamId}/${awayTeamId}`);
+    const params = new URLSearchParams();
+    homeAbsent.forEach(id => params.append("home_absent", id.toString()));
+    awayAbsent.forEach(id => params.append("away_absent", id.toString()));
+    params.append("home_rest", homeRest.toString());
+    params.append("away_rest", awayRest.toString());
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    const response = await fetch(`${API_BASE_URL}/predict/full-match/${homeTeamId}/${awayTeamId}${queryString}`);
     if (!response.ok) throw new Error("Failed to fetch full match prediction");
     return response.json();
   },

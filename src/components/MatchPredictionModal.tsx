@@ -121,9 +121,10 @@ export function MatchPredictionModal({
 
   // Fetch match prediction (for main analysis: winner, spread, confidence)
   // Endpoint: /predict/match/{homeCode}/{awayCode}
+  // Source A (Header/Scoreboard): Uses team CODES (e.g., "LAL", "BOS")
   const {
     data: prediction,
-    isLoading,
+    isLoading: isPredictionLoading,
     refetch,
     error,
   } = useQuery({
@@ -147,7 +148,11 @@ export function MatchPredictionModal({
 
   // Fetch full match prediction with player data (for player projections in list)
   // Endpoint: /predict/full-match/{homeId}/{awayId}
-  const { data: fullPrediction } = useQuery({
+  // Source B (Player List): Uses team IDs (integers, e.g., 1610612747)
+  const {
+    data: fullPrediction,
+    isLoading: isPlayersLoading,
+  } = useQuery({
     queryKey: [
       "full-match-prediction",
       homeTeamId,
@@ -355,7 +360,7 @@ export function MatchPredictionModal({
         {/* Content - Scroll Natif et Padding réduit (p-4) */}
         <div className="flex-1 overflow-y-auto min-h-0 bg-gradient-to-b from-slate-900/50 to-slate-950/50">
           <div className="p-4">
-            {isLoading ? (
+            {isPredictionLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="space-y-4 text-center">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500 mx-auto"></div>
@@ -896,6 +901,120 @@ export function MatchPredictionModal({
                         </div>
                       </TabsContent>
                     </Tabs>
+                  </CardContent>
+                </Card>
+
+                {/* ============ SECTION 7: PLAYER PROJECTIONS ============ */}
+                <Card className="border-indigo-500/30 bg-gradient-to-br from-indigo-950/20 to-slate-900/30">
+                  <CardHeader className="pb-2 pt-3 px-4">
+                    <CardTitle className="text-xs text-indigo-300">Player Projections</CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4">
+                    {isPlayersLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="space-y-3 text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div>
+                          <p className="text-xs text-muted-foreground">Analyzing players...</p>
+                        </div>
+                      </div>
+                    ) : fullPrediction && (fullPrediction.home_players.length > 0 || fullPrediction.away_players.length > 0) ? (
+                      <Tabs defaultValue="home" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 h-7 mb-3">
+                          <TabsTrigger value="home" className="text-[10px] h-full">
+                            {game?.homeTeam} ({fullPrediction.home_players.length})
+                          </TabsTrigger>
+                          <TabsTrigger value="away" className="text-[10px] h-full">
+                            {game?.awayTeam} ({fullPrediction.away_players.length})
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="home" className="mt-0">
+                          <div className="rounded-lg border border-indigo-500/20 overflow-hidden">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="border-indigo-500/20 bg-slate-800/40 hover:bg-slate-800/40">
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2">Player</TableHead>
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2 text-right">PTS</TableHead>
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2 text-right">REB</TableHead>
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2 text-right">AST</TableHead>
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2 text-right">PRA</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {fullPrediction.home_players.map((player, idx) => (
+                                  <TableRow
+                                    key={`home-${player.player_id}`}
+                                    className="border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors"
+                                    onClick={() => handlePlayerClick(player, "home")}
+                                  >
+                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2 truncate">
+                                      {player.player}
+                                    </TableCell>
+                                    <TableCell className="text-[9px] font-bold text-amber-400 py-2 px-2 text-right">
+                                      {player.predicted_stats?.PTS?.toFixed(1) || "-"}
+                                    </TableCell>
+                                    <TableCell className="text-[9px] font-bold text-cyan-400 py-2 px-2 text-right">
+                                      {player.predicted_stats?.REB?.toFixed(1) || "-"}
+                                    </TableCell>
+                                    <TableCell className="text-[9px] font-bold text-green-400 py-2 px-2 text-right">
+                                      {player.predicted_stats?.AST?.toFixed(1) || "-"}
+                                    </TableCell>
+                                    <TableCell className="text-[9px] font-bold text-purple-400 py-2 px-2 text-right">
+                                      {player.advanced_metrics_projected?.PRA?.toFixed(1) || "-"}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="away" className="mt-0">
+                          <div className="rounded-lg border border-indigo-500/20 overflow-hidden">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="border-indigo-500/20 bg-slate-800/40 hover:bg-slate-800/40">
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2">Player</TableHead>
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2 text-right">PTS</TableHead>
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2 text-right">REB</TableHead>
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2 text-right">AST</TableHead>
+                                  <TableHead className="text-[9px] font-semibold text-indigo-300/80 py-2 px-2 text-right">PRA</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {fullPrediction.away_players.map((player, idx) => (
+                                  <TableRow
+                                    key={`away-${player.player_id}`}
+                                    className="border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors"
+                                    onClick={() => handlePlayerClick(player, "away")}
+                                  >
+                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2 truncate">
+                                      {player.player}
+                                    </TableCell>
+                                    <TableCell className="text-[9px] font-bold text-amber-400 py-2 px-2 text-right">
+                                      {player.predicted_stats?.PTS?.toFixed(1) || "-"}
+                                    </TableCell>
+                                    <TableCell className="text-[9px] font-bold text-cyan-400 py-2 px-2 text-right">
+                                      {player.predicted_stats?.REB?.toFixed(1) || "-"}
+                                    </TableCell>
+                                    <TableCell className="text-[9px] font-bold text-green-400 py-2 px-2 text-right">
+                                      {player.predicted_stats?.AST?.toFixed(1) || "-"}
+                                    </TableCell>
+                                    <TableCell className="text-[9px] font-bold text-purple-400 py-2 px-2 text-right">
+                                      {player.advanced_metrics_projected?.PRA?.toFixed(1) || "-"}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground text-xs">
+                        Player data unavailable
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
