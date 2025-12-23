@@ -351,19 +351,18 @@ export function PlayerDetailsModal({
                   </AvatarFallback>
                 </Avatar>
               </div>
-              {player.matchup_analysis?.description && (
+              {player.matchup_analysis && (
                 <div className="text-right">
-                  <Badge
-                    className={`text-xs font-bold px-4 py-1.5 border-2 ${
-                      player.matchup_analysis.description.includes("🔴")
-                        ? "bg-red-950/40 text-red-200 border-red-500/50 shadow-lg shadow-red-500/20"
-                        : player.matchup_analysis.description.includes("🟢")
-                          ? "bg-emerald-950/40 text-emerald-200 border-emerald-500/50 shadow-lg shadow-emerald-500/20"
-                          : "bg-amber-950/40 text-amber-200 border-amber-500/50 shadow-lg shadow-amber-500/20"
-                    }`}
-                  >
-                    {player.matchup_analysis.description}
-                  </Badge>
+                  {(() => {
+                    const matchupInfo = getMatchupMessage(player.matchup_analysis.factor_applied);
+                    return (
+                      <Badge
+                        className={`text-xs font-bold px-4 py-1.5 border-2 ${matchupInfo.color}`}
+                      >
+                        {matchupInfo.message}
+                      </Badge>
+                    );
+                  })()}
                 </div>
               )}
             </div>
