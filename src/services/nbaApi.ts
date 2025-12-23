@@ -528,8 +528,8 @@ export const nbaApi = {
   },
 
   async predictMatch(
-    homeTeamId: string,
-    awayTeamId: string,
+    homeCode: string,
+    awayCode: string,
     homeMissingPlayerIds?: number[],
     awayMissingPlayerIds?: number[]
   ): Promise<MatchPrediction> {
@@ -541,7 +541,7 @@ export const nbaApi = {
       awayMissingPlayerIds.forEach(id => params.append("away_missing_players", id.toString()));
     }
     const queryString = params.toString() ? `?${params.toString()}` : "";
-    const response = await fetch(`${API_BASE_URL}/predict/match/${homeTeamId}/${awayTeamId}${queryString}`);
+    const response = await fetch(`${API_BASE_URL}/predict/match/${homeCode}/${awayCode}${queryString}`);
     if (!response.ok) throw new Error("Failed to predict match");
     return response.json();
   },
