@@ -446,19 +446,34 @@ export function PlayerDetailsModal({
                       </div>
                       <div className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-3">
                         <p className="text-xs text-slate-400 font-medium mb-2">Projection Impact</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">
-                            <span className="text-slate-400">Before: </span>
-                            <span className="font-bold text-amber-300">{player.shot_quality_analysis.pts_before.toFixed(1)}</span>
-                          </span>
-                          <span className="text-slate-500">→</span>
-                          <span className="text-sm">
-                            <span className="text-slate-400">After: </span>
-                            <span className={`font-bold ${player.shot_quality_analysis.pts_after < player.shot_quality_analysis.pts_before ? "text-red-300" : "text-emerald-300"}`}>
-                              {player.shot_quality_analysis.pts_after.toFixed(1)}
-                            </span>
-                          </span>
-                        </div>
+                        {(() => {
+                          const baseProjection = calculateBaseProjection(
+                            player.shot_quality_analysis.pts_after,
+                            player.matchup_analysis?.factor_applied,
+                            player.lineup_synergy?.multiplier
+                          );
+                          const difference = Math.abs(player.shot_quality_analysis.pts_after - baseProjection);
+                          return (
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm">
+                                  <span className="text-slate-400">Before: </span>
+                                  <span className="font-bold text-amber-300">{baseProjection.toFixed(1)}</span>
+                                </span>
+                                <span className="text-slate-500">→</span>
+                                <span className="text-sm">
+                                  <span className="text-slate-400">After: </span>
+                                  <span className={`font-bold ${player.shot_quality_analysis.pts_after < baseProjection ? "text-red-300" : "text-emerald-300"}`}>
+                                    {player.shot_quality_analysis.pts_after.toFixed(1)}
+                                  </span>
+                                </span>
+                              </div>
+                              {difference < 0.5 && (
+                                <p className="text-xs text-slate-400 mt-2 italic">Pas d'ajustement shot quality appliqué</p>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </CardContent>
