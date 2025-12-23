@@ -232,6 +232,7 @@ export interface PlayerFullPrediction {
     multiplier: number;
     impact_pct: number;
   };
+  volatility?: number;
 }
 
 export interface MatchContext {
