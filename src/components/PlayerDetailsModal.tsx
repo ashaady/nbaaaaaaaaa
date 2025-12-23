@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { TrendingUp, Zap, Calendar, Target, X, Save } from "lucide-react";
+import { TrendingUp, Zap, Calendar, Target, X, Save, AlertCircle } from "lucide-react";
 
 interface PlayerDetailsModalProps {
   isOpen: boolean;
@@ -39,6 +39,117 @@ const getProjectionValue = (
 ): number => {
   if (stat === "PRA") return player.advanced_metrics_projected.PRA;
   return player.predicted_stats[stat] || 0;
+};
+
+const getMatchupMessage = (factor: number | undefined) => {
+  if (!factor) return { message: "Matchup Équilibré", color: "bg-amber-950/40 text-amber-200 border-amber-500/50", impact: 0 };
+
+  const impactPercent = ((factor - 1) * 100);
+
+  if (factor < 0.95) {
+    return {
+      message: `🔴 Défense Solide ${impactPercent.toFixed(0)}%`,
+      color: "bg-red-950/40 text-red-200 border-red-500/50 shadow-lg shadow-red-500/20",
+      impact: impactPercent
+    };
+  } else if (factor > 1.05) {
+    return {
+      message: `🟢 Exploite Faiblesse +${impactPercent.toFixed(0)}%`,
+      color: "bg-emerald-950/40 text-emerald-200 border-emerald-500/50 shadow-lg shadow-emerald-500/20",
+      impact: impactPercent
+    };
+  } else {
+    return {
+      message: "⚖️ Matchup Équilibré",
+      color: "bg-amber-950/40 text-amber-200 border-amber-500/50 shadow-lg shadow-amber-500/20",
+      impact: impactPercent
+    };
+  }
+};
+
+const getLineupSynergyMessage = (impactPct: number, multiplier: number) => {
+  const absImpact = Math.abs(impactPct);
+
+  if (multiplier === 1.0 || impactPct === 0) {
+    return {
+      title: "📊 Données lineup indisponibles",
+      description: "Impact synergy non calculé",
+      color: "bg-slate-700/20 border-slate-600/30",
+      textColor: "text-slate-300"
+    };
+  }
+
+  if (absImpact > 5) {
+    if (impactPct > 0) {
+      return {
+        title: `🔥 +${impactPct.toFixed(1)}% Boost significatif`,
+        description: "Excellente chimie lineup renforçant les performances",
+        color: "bg-emerald-500/20 border-emerald-500/30",
+        textColor: "text-emerald-300"
+      };
+    } else {
+      return {
+        title: `⚠️ ${impactPct.toFixed(1)}% Lineup sous-performant`,
+        description: "Problèmes d'ajustement affectant les performances",
+        color: "bg-red-500/20 border-red-500/30",
+        textColor: "text-red-300"
+      };
+    }
+  } else if (absImpact > 2) {
+    if (impactPct > 0) {
+      return {
+        title: `✓ +${impactPct.toFixed(1)}% Synergy positive`,
+        description: "Chimie lineup positive favorisant les performances",
+        color: "bg-emerald-500/20 border-emerald-500/30",
+        textColor: "text-emerald-300"
+      };
+    } else {
+      return {
+        title: `⚠️ ${impactPct.toFixed(1)}% Synergy négative`,
+        description: "Problèmes d'espacement affectant l'ajustement d'équipe",
+        color: "bg-red-500/20 border-red-500/30",
+        textColor: "text-red-300"
+      };
+    }
+  } else {
+    return {
+      title: "⚖️ Impact neutre",
+      description: "Synergy d'équipe équilibrée",
+      color: "bg-slate-700/20 border-slate-600/30",
+      textColor: "text-slate-300"
+    };
+  }
+};
+
+const calculateBaseProjection = (
+  finalProjection: number,
+  matchupFactor: number | undefined,
+  lineupMultiplier: number | undefined
+): number => {
+  let divisor = 1;
+  if (matchupFactor) divisor *= matchupFactor;
+  if (lineupMultiplier) divisor *= lineupMultiplier;
+  return finalProjection / divisor;
+};
+
+const getVolatilityBadge = (volatility: number | undefined) => {
+  if (!volatility || volatility === 0) return { label: "N/A", color: "bg-slate-700/40 text-slate-300 border-slate-600/50", icon: "?" };
+
+  if (volatility < 20) {
+    return { label: "Stable", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", icon: "✓" };
+  } else if (volatility < 30) {
+    return { label: "Modéré", color: "bg-amber-500/20 text-amber-300 border-amber-500/30", icon: "~" };
+  } else {
+    return { label: "Volatile", color: "bg-red-500/20 text-red-300 border-red-500/30", icon: "⚡" };
+  }
+};
+
+const getPointsRange = (projection: number, volatility: number | undefined) => {
+  if (!volatility || volatility === 0) return null;
+  const volatilityRatio = volatility / 100;
+  const min = Math.floor(projection * (1 - volatilityRatio));
+  const max = Math.ceil(projection * (1 + volatilityRatio));
+  return { min, max };
 };
 
 export function PlayerDetailsModal({
@@ -240,19 +351,18 @@ export function PlayerDetailsModal({
                   </AvatarFallback>
                 </Avatar>
               </div>
-              {player.matchup_analysis?.description && (
+              {player.matchup_analysis && (
                 <div className="text-right">
-                  <Badge
-                    className={`text-xs font-bold px-4 py-1.5 border-2 ${
-                      player.matchup_analysis.description.includes("🔴")
-                        ? "bg-red-950/40 text-red-200 border-red-500/50 shadow-lg shadow-red-500/20"
-                        : player.matchup_analysis.description.includes("🟢")
-                          ? "bg-emerald-950/40 text-emerald-200 border-emerald-500/50 shadow-lg shadow-emerald-500/20"
-                          : "bg-amber-950/40 text-amber-200 border-amber-500/50 shadow-lg shadow-amber-500/20"
-                    }`}
-                  >
-                    {player.matchup_analysis.description}
-                  </Badge>
+                  {(() => {
+                    const matchupInfo = getMatchupMessage(player.matchup_analysis.factor_applied);
+                    return (
+                      <Badge
+                        className={`text-xs font-bold px-4 py-1.5 border-2 ${matchupInfo.color}`}
+                      >
+                        {matchupInfo.message}
+                      </Badge>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -336,19 +446,34 @@ export function PlayerDetailsModal({
                       </div>
                       <div className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-3">
                         <p className="text-xs text-slate-400 font-medium mb-2">Projection Impact</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">
-                            <span className="text-slate-400">Before: </span>
-                            <span className="font-bold text-amber-300">{player.shot_quality_analysis.pts_before.toFixed(1)}</span>
-                          </span>
-                          <span className="text-slate-500">→</span>
-                          <span className="text-sm">
-                            <span className="text-slate-400">After: </span>
-                            <span className={`font-bold ${player.shot_quality_analysis.pts_after < player.shot_quality_analysis.pts_before ? "text-red-300" : "text-emerald-300"}`}>
-                              {player.shot_quality_analysis.pts_after.toFixed(1)}
-                            </span>
-                          </span>
-                        </div>
+                        {(() => {
+                          const baseProjection = calculateBaseProjection(
+                            player.shot_quality_analysis.pts_after,
+                            player.matchup_analysis?.factor_applied,
+                            player.lineup_synergy?.multiplier
+                          );
+                          const difference = Math.abs(player.shot_quality_analysis.pts_after - baseProjection);
+                          return (
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm">
+                                  <span className="text-slate-400">Before: </span>
+                                  <span className="font-bold text-amber-300">{baseProjection.toFixed(1)}</span>
+                                </span>
+                                <span className="text-slate-500">→</span>
+                                <span className="text-sm">
+                                  <span className="text-slate-400">After: </span>
+                                  <span className={`font-bold ${player.shot_quality_analysis.pts_after < baseProjection ? "text-red-300" : "text-emerald-300"}`}>
+                                    {player.shot_quality_analysis.pts_after.toFixed(1)}
+                                  </span>
+                                </span>
+                              </div>
+                              {difference < 0.5 && (
+                                <p className="text-xs text-slate-400 mt-2 italic">Pas d'ajustement shot quality appliqué</p>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </CardContent>
@@ -361,42 +486,19 @@ export function PlayerDetailsModal({
                   <CardContent className="pt-6">
                     <div className="space-y-4">
                       <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Lineup Synergy</p>
-                      <div className={`rounded-lg p-4 border-2 backdrop-blur-sm ${
-                        player.lineup_synergy.impact_pct > 0
-                          ? "bg-emerald-500/20 border-emerald-500/30"
-                          : player.lineup_synergy.impact_pct < 0
-                            ? "bg-red-500/20 border-red-500/30"
-                            : "bg-slate-700/20 border-slate-600/30"
-                      }`}>
-                        {player.lineup_synergy.impact_pct > 0 ? (
-                          <>
-                            <p className="text-2xl font-bold text-emerald-300 mb-2">
-                              🔥 +{player.lineup_synergy.impact_pct.toFixed(1)}% Boost
+                      {(() => {
+                        const synergyMsg = getLineupSynergyMessage(player.lineup_synergy.impact_pct, player.lineup_synergy.multiplier);
+                        return (
+                          <div className={`rounded-lg p-4 border-2 backdrop-blur-sm ${synergyMsg.color}`}>
+                            <p className={`text-2xl font-bold ${synergyMsg.textColor} mb-2`}>
+                              {synergyMsg.title}
                             </p>
-                            <p className="text-sm text-emerald-200/90">
-                              Exceptional lineup chemistry enhancing team performance
+                            <p className={`text-sm ${synergyMsg.textColor}/90`}>
+                              {synergyMsg.description}
                             </p>
-                          </>
-                        ) : player.lineup_synergy.impact_pct < 0 ? (
-                          <>
-                            <p className="text-2xl font-bold text-red-300 mb-2">
-                              ⚠️ {player.lineup_synergy.impact_pct.toFixed(1)}% Penalty
-                            </p>
-                            <p className="text-sm text-red-200/90">
-                              Spacing issues affecting team fit
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-2xl font-bold text-slate-300 mb-2">
-                              ⚖️ Neutral Chemistry
-                            </p>
-                            <p className="text-sm text-slate-300/90">
-                              Balanced team synergy
-                            </p>
-                          </>
-                        )}
-                      </div>
+                          </div>
+                        );
+                      })()}
                       <div className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-3 text-center">
                         <p className="text-xs text-slate-400 font-medium mb-1">Synergy Multiplier</p>
                         <p className="text-xl font-bold text-cyan-300">
@@ -407,6 +509,71 @@ export function PlayerDetailsModal({
                   </CardContent>
                 </Card>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Volatility Section */}
+        {player.volatility !== undefined && (
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-cyan-400" />
+              Performance Stability
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="bg-slate-800/40 border-slate-700/50">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Volatility Index</p>
+                      {(() => {
+                        const volatilityBadge = getVolatilityBadge(player.volatility);
+                        return (
+                          <Badge className={`text-sm font-bold px-4 py-2 border ${volatilityBadge.color}`}>
+                            {volatilityBadge.icon} {volatilityBadge.label} ({player.volatility.toFixed(1)}%)
+                          </Badge>
+                        );
+                      })()}
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 font-medium mb-1">Stability Assessment</p>
+                      <p className="text-sm text-slate-300">
+                        {player.volatility < 20
+                          ? "Très stable et prévisible dans ses performances"
+                          : player.volatility < 30
+                            ? "Performances modérément variables"
+                            : "Performances très volatiles et imprévisibles"}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-800/40 border-slate-700/50">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Expected Range</p>
+                      {(() => {
+                        const range = getPointsRange(player.predicted_stats.PTS, player.volatility);
+                        return range ? (
+                          <div className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-3">
+                            <p className="text-center">
+                              <span className="text-2xl font-bold text-emerald-300">{range.min}</span>
+                              <span className="text-slate-400 mx-2">-</span>
+                              <span className="text-2xl font-bold text-emerald-300">{range.max}</span>
+                              <span className="text-slate-400 ml-2">PTS</span>
+                            </p>
+                            <p className="text-xs text-slate-400 text-center mt-2">
+                              Fourchette basée sur la volatilité
+                            </p>
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
