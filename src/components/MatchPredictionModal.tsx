@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -90,19 +91,24 @@ export function MatchPredictionModal({
   const [playerModalOpen, setPlayerModalOpen] = useState(false);
   const [modalTeam, setModalTeam] = useState<"home" | "away">("home");
 
-  const homeTeamId = game ? getTeamCode(game.homeTeam) : "";
-  const awayTeamId = game ? getTeamCode(game.awayTeam) : "";
+  // Team codes for predictMatch endpoint (/predict/match/{homeCode}/{awayCode})
+  const homeCode = game ? getTeamCode(game.homeTeam) : "";
+  const awayCode = game ? getTeamCode(game.awayTeam) : "";
+
+  // Team IDs for getFullMatchPrediction endpoint (/predict/full-match/{homeId}/{awayId})
+  const homeTeamId = game?.homeTeamId;
+  const awayTeamId = game?.awayTeamId;
 
   const { data: homeRoster = [] } = useQuery({
-    queryKey: ["team-roster", homeTeamId],
-    queryFn: () => nbaApi.getTeamRoster(homeTeamId),
-    enabled: !!homeTeamId,
+    queryKey: ["team-roster", homeCode],
+    queryFn: () => nbaApi.getTeamRoster(homeCode),
+    enabled: !!homeCode,
   });
 
   const { data: awayRoster = [] } = useQuery({
-    queryKey: ["team-roster", awayTeamId],
-    queryFn: () => nbaApi.getTeamRoster(awayTeamId),
-    enabled: !!awayTeamId,
+    queryKey: ["team-roster", awayCode],
+    queryFn: () => nbaApi.getTeamRoster(awayCode),
+    enabled: !!awayCode,
   });
 
   const homePlayerSearchResults = homeRoster.filter((player) =>
@@ -114,6 +120,7 @@ export function MatchPredictionModal({
   );
 
   // Fetch match prediction (for main analysis: winner, spread, confidence)
+  // Endpoint: /predict/match/{homeCode}/{awayCode}
   const {
     data: prediction,
     isLoading,
@@ -122,23 +129,24 @@ export function MatchPredictionModal({
   } = useQuery({
     queryKey: [
       "match-prediction",
-      homeTeamId,
-      awayTeamId,
+      homeCode,
+      awayCode,
       homeMissingPlayers.map((p) => p.id).join(","),
       awayMissingPlayers.map((p) => p.id).join(","),
     ],
     queryFn: async () => {
       return await nbaApi.predictMatch(
-        homeTeamId,
-        awayTeamId,
+        homeCode,
+        awayCode,
         homeMissingPlayers.map((p) => p.id),
         awayMissingPlayers.map((p) => p.id)
       );
     },
-    enabled: open && !!homeTeamId && !!awayTeamId,
+    enabled: open && !!homeCode && !!awayCode,
   });
 
   // Fetch full match prediction with player data (for player projections in list)
+  // Endpoint: /predict/full-match/{homeId}/{awayId}
   const { data: fullPrediction } = useQuery({
     queryKey: [
       "full-match-prediction",
@@ -149,8 +157,8 @@ export function MatchPredictionModal({
     ],
     queryFn: async () => {
       return await nbaApi.getFullMatchPredictionWithAbsents(
-        homeTeamId,
-        awayTeamId,
+        homeTeamId!,
+        awayTeamId!,
         homeMissingPlayers.map((p) => p.id),
         awayMissingPlayers.map((p) => p.id)
       );
@@ -204,13 +212,13 @@ export function MatchPredictionModal({
   );
 
   const handleSaveMatch = useCallback(async () => {
-    if (!game || !prediction) return;
+    if (!game || !prediction || !homeTeamId || !awayTeamId) return;
 
     try {
       setIsSaving(true);
 
-      const homeTeamIdNum = typeof game.homeTeamId === "string" ? parseInt(game.homeTeamId) : game.homeTeamId;
-      const awayTeamIdNum = typeof game.awayTeamId === "string" ? parseInt(game.awayTeamId) : game.awayTeamId;
+      const homeTeamIdNum = typeof homeTeamId === "string" ? parseInt(homeTeamId) : homeTeamId;
+      const awayTeamIdNum = typeof awayTeamId === "string" ? parseInt(awayTeamId) : awayTeamId;
 
       if (!homeTeamIdNum || !awayTeamIdNum) {
         toast.error("Team IDs not available");
@@ -218,9 +226,10 @@ export function MatchPredictionModal({
       }
 
       // Fetch full match prediction with player data for saving
-      const fullPrediction = await nbaApi.getFullMatchPredictionWithAbsents(
-        homeTeamId,
-        awayTeamId,
+      // Using team IDs (not codes) for the full-match endpoint
+      const fullMatchData = await nbaApi.getFullMatchPredictionWithAbsents(
+        homeTeamIdNum,
+        awayTeamIdNum,
         homeMissingPlayers.map((p) => p.id),
         awayMissingPlayers.map((p) => p.id)
       );
@@ -247,8 +256,8 @@ export function MatchPredictionModal({
         home_team_id: homeTeamIdNum,
         away_team: game.awayTeam,
         away_team_id: awayTeamIdNum,
-        home_players: fullPrediction.home_players.map(formatPlayerStats),
-        away_players: fullPrediction.away_players.map(formatPlayerStats),
+        home_players: fullMatchData.home_players.map(formatPlayerStats),
+        away_players: fullMatchData.away_players.map(formatPlayerStats),
         winner_prediction: prediction.predicted_winner,
       };
 
@@ -328,6 +337,7 @@ export function MatchPredictionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* 1. RÉDUCTION DE LA TAILLE ICI (max-w-[850px] et max-h-[85vh]) */}
       <DialogContent className="sm:max-w-[850px] max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-blue-500/20">
+        <DialogDescription className="hidden">Match Analysis</DialogDescription>
 
         {/* Header - Padding réduit */}
         <DialogHeader className="border-b border-blue-500/20 px-6 py-4 bg-gradient-to-r from-slate-900/80 via-purple-950/30 to-slate-800/80 backdrop-blur-sm flex-shrink-0">
@@ -511,10 +521,10 @@ export function MatchPredictionModal({
                   />
                 )}
 
-                {homeTeamId && awayTeamId && (
+                {homeCode && awayCode && (
                   <ShootingBattleCard
-                    homeTeamCode={homeTeamId}
-                    awayTeamCode={awayTeamId}
+                    homeTeamCode={homeCode}
+                    awayTeamCode={awayCode}
                     homeMissingPlayers={homeMissingPlayers}
                     awayMissingPlayers={awayMissingPlayers}
                   />

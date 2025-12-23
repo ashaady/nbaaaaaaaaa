@@ -528,8 +528,8 @@ export const nbaApi = {
   },
 
   async predictMatch(
-    homeTeamId: string,
-    awayTeamId: string,
+    homeCode: string,
+    awayCode: string,
     homeMissingPlayerIds?: number[],
     awayMissingPlayerIds?: number[]
   ): Promise<MatchPrediction> {
@@ -541,7 +541,7 @@ export const nbaApi = {
       awayMissingPlayerIds.forEach(id => params.append("away_missing_players", id.toString()));
     }
     const queryString = params.toString() ? `?${params.toString()}` : "";
-    const response = await fetch(`${API_BASE_URL}/predict/match/${homeTeamId}/${awayTeamId}${queryString}`);
+    const response = await fetch(`${API_BASE_URL}/predict/match/${homeCode}/${awayCode}${queryString}`);
     if (!response.ok) throw new Error("Failed to predict match");
     return response.json();
   },
@@ -600,8 +600,8 @@ export const nbaApi = {
   },
 
   async getFullMatchPrediction(
-    homeTeamId: string,
-    awayTeamId: string
+    homeTeamId: string | number,
+    awayTeamId: string | number
   ): Promise<FullMatchPrediction> {
     const response = await fetch(`${API_BASE_URL}/predict/full-match/${homeTeamId}/${awayTeamId}`);
     if (!response.ok) throw new Error("Failed to fetch full match prediction");
@@ -609,15 +609,15 @@ export const nbaApi = {
   },
 
   async getFullMatchPredictionWithAbsents(
-    homeTeamId: string,
-    awayTeamId: string,
+    homeTeamId: string | number,
+    awayTeamId: string | number,
     homeAbsentIds?: number[],
     awayAbsentIds?: number[]
   ): Promise<InteractiveMatchPrediction> {
     const params = new URLSearchParams();
     params.append("home_rest", "1");
     params.append("away_rest", "1");
-    
+
     if (homeAbsentIds && homeAbsentIds.length > 0) {
       homeAbsentIds.forEach(id => params.append("home_absent", id.toString()));
     }
@@ -735,8 +735,8 @@ export const nbaApi = {
   },
 
   async getFullMatchPredictionForSave(
-    homeId: string | number,
-    awayId: string | number,
+    homeTeamId: string | number,
+    awayTeamId: string | number,
     homeAbsent: number[] = [],
     awayAbsent: number[] = []
   ): Promise<FullMatchPrediction> {
@@ -745,7 +745,7 @@ export const nbaApi = {
     awayAbsent.forEach(id => params.append("away_absent", id.toString()));
 
     const queryString = params.toString() ? `?${params.toString()}` : "";
-    const response = await fetch(`${API_BASE_URL}/predict/full-match/${homeId}/${awayId}${queryString}`);
+    const response = await fetch(`${API_BASE_URL}/predict/full-match/${homeTeamId}/${awayTeamId}${queryString}`);
     if (!response.ok) throw new Error("Failed to fetch full match prediction");
     return response.json();
   },
