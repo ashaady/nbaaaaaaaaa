@@ -120,6 +120,7 @@ export function MatchPredictionModal({
   );
 
   // Fetch match prediction (for main analysis: winner, spread, confidence)
+  // Endpoint: /predict/match/{homeCode}/{awayCode}
   const {
     data: prediction,
     isLoading,
@@ -128,23 +129,24 @@ export function MatchPredictionModal({
   } = useQuery({
     queryKey: [
       "match-prediction",
-      homeTeamId,
-      awayTeamId,
+      homeCode,
+      awayCode,
       homeMissingPlayers.map((p) => p.id).join(","),
       awayMissingPlayers.map((p) => p.id).join(","),
     ],
     queryFn: async () => {
       return await nbaApi.predictMatch(
-        homeTeamId,
-        awayTeamId,
+        homeCode,
+        awayCode,
         homeMissingPlayers.map((p) => p.id),
         awayMissingPlayers.map((p) => p.id)
       );
     },
-    enabled: open && !!homeTeamId && !!awayTeamId,
+    enabled: open && !!homeCode && !!awayCode,
   });
 
   // Fetch full match prediction with player data (for player projections in list)
+  // Endpoint: /predict/full-match/{homeId}/{awayId}
   const { data: fullPrediction } = useQuery({
     queryKey: [
       "full-match-prediction",
@@ -155,8 +157,8 @@ export function MatchPredictionModal({
     ],
     queryFn: async () => {
       return await nbaApi.getFullMatchPredictionWithAbsents(
-        homeTeamId,
-        awayTeamId,
+        homeTeamId!,
+        awayTeamId!,
         homeMissingPlayers.map((p) => p.id),
         awayMissingPlayers.map((p) => p.id)
       );
