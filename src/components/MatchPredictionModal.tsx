@@ -360,7 +360,7 @@ export function MatchPredictionModal({
         {/* Content - Scroll Natif et Padding réduit (p-4) */}
         <div className="flex-1 overflow-y-auto min-h-0 bg-gradient-to-b from-slate-900/50 to-slate-950/50">
           <div className="p-4">
-            {isLoading ? (
+            {isPredictionLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="space-y-4 text-center">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500 mx-auto"></div>
