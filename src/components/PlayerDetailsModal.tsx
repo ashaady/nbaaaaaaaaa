@@ -41,6 +41,117 @@ const getProjectionValue = (
   return player.predicted_stats[stat] || 0;
 };
 
+const getMatchupMessage = (factor: number | undefined) => {
+  if (!factor) return { message: "Matchup Équilibré", color: "bg-amber-950/40 text-amber-200 border-amber-500/50", impact: 0 };
+
+  const impactPercent = ((factor - 1) * 100);
+
+  if (factor < 0.95) {
+    return {
+      message: `🔴 Défense Solide ${impactPercent.toFixed(0)}%`,
+      color: "bg-red-950/40 text-red-200 border-red-500/50 shadow-lg shadow-red-500/20",
+      impact: impactPercent
+    };
+  } else if (factor > 1.05) {
+    return {
+      message: `🟢 Exploite Faiblesse +${impactPercent.toFixed(0)}%`,
+      color: "bg-emerald-950/40 text-emerald-200 border-emerald-500/50 shadow-lg shadow-emerald-500/20",
+      impact: impactPercent
+    };
+  } else {
+    return {
+      message: "⚖️ Matchup Équilibré",
+      color: "bg-amber-950/40 text-amber-200 border-amber-500/50 shadow-lg shadow-amber-500/20",
+      impact: impactPercent
+    };
+  }
+};
+
+const getLineupSynergyMessage = (impactPct: number, multiplier: number) => {
+  const absImpact = Math.abs(impactPct);
+
+  if (multiplier === 1.0 || impactPct === 0) {
+    return {
+      title: "📊 Données lineup indisponibles",
+      description: "Impact synergy non calculé",
+      color: "bg-slate-700/20 border-slate-600/30",
+      textColor: "text-slate-300"
+    };
+  }
+
+  if (absImpact > 5) {
+    if (impactPct > 0) {
+      return {
+        title: `🔥 +${impactPct.toFixed(1)}% Boost significatif`,
+        description: "Excellente chimie lineup renforçant les performances",
+        color: "bg-emerald-500/20 border-emerald-500/30",
+        textColor: "text-emerald-300"
+      };
+    } else {
+      return {
+        title: `⚠️ ${impactPct.toFixed(1)}% Lineup sous-performant`,
+        description: "Problèmes d'ajustement affectant les performances",
+        color: "bg-red-500/20 border-red-500/30",
+        textColor: "text-red-300"
+      };
+    }
+  } else if (absImpact > 2) {
+    if (impactPct > 0) {
+      return {
+        title: `✓ +${impactPct.toFixed(1)}% Synergy positive`,
+        description: "Chimie lineup positive favorisant les performances",
+        color: "bg-emerald-500/20 border-emerald-500/30",
+        textColor: "text-emerald-300"
+      };
+    } else {
+      return {
+        title: `⚠️ ${impactPct.toFixed(1)}% Synergy négative`,
+        description: "Problèmes d'espacement affectant l'ajustement d'équipe",
+        color: "bg-red-500/20 border-red-500/30",
+        textColor: "text-red-300"
+      };
+    }
+  } else {
+    return {
+      title: "⚖️ Impact neutre",
+      description: "Synergy d'équipe équilibrée",
+      color: "bg-slate-700/20 border-slate-600/30",
+      textColor: "text-slate-300"
+    };
+  }
+};
+
+const calculateBaseProjection = (
+  finalProjection: number,
+  matchupFactor: number | undefined,
+  lineupMultiplier: number | undefined
+): number => {
+  let divisor = 1;
+  if (matchupFactor) divisor *= matchupFactor;
+  if (lineupMultiplier) divisor *= lineupMultiplier;
+  return finalProjection / divisor;
+};
+
+const getVolatilityBadge = (volatility: number | undefined) => {
+  if (!volatility || volatility === 0) return { label: "N/A", color: "bg-slate-700/40 text-slate-300 border-slate-600/50", icon: "?" };
+
+  if (volatility < 20) {
+    return { label: "Stable", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", icon: "✓" };
+  } else if (volatility < 30) {
+    return { label: "Modéré", color: "bg-amber-500/20 text-amber-300 border-amber-500/30", icon: "~" };
+  } else {
+    return { label: "Volatile", color: "bg-red-500/20 text-red-300 border-red-500/30", icon: "⚡" };
+  }
+};
+
+const getPointsRange = (projection: number, volatility: number | undefined) => {
+  if (!volatility || volatility === 0) return null;
+  const volatilityRatio = volatility / 100;
+  const min = Math.floor(projection * (1 - volatilityRatio));
+  const max = Math.ceil(projection * (1 + volatilityRatio));
+  return { min, max };
+};
+
 export function PlayerDetailsModal({
   isOpen,
   onOpenChange,
