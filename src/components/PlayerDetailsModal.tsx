@@ -513,6 +513,71 @@ export function PlayerDetailsModal({
           </div>
         )}
 
+        {/* Volatility Section */}
+        {player.volatility !== undefined && (
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-cyan-400" />
+              Performance Stability
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="bg-slate-800/40 border-slate-700/50">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Volatility Index</p>
+                      {(() => {
+                        const volatilityBadge = getVolatilityBadge(player.volatility);
+                        return (
+                          <Badge className={`text-sm font-bold px-4 py-2 border ${volatilityBadge.color}`}>
+                            {volatilityBadge.icon} {volatilityBadge.label} ({player.volatility.toFixed(1)}%)
+                          </Badge>
+                        );
+                      })()}
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 font-medium mb-1">Stability Assessment</p>
+                      <p className="text-sm text-slate-300">
+                        {player.volatility < 20
+                          ? "Très stable et prévisible dans ses performances"
+                          : player.volatility < 30
+                            ? "Performances modérément variables"
+                            : "Performances très volatiles et imprévisibles"}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-800/40 border-slate-700/50">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Expected Range</p>
+                      {(() => {
+                        const range = getPointsRange(player.predicted_stats.PTS, player.volatility);
+                        return range ? (
+                          <div className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-3">
+                            <p className="text-center">
+                              <span className="text-2xl font-bold text-emerald-300">{range.min}</span>
+                              <span className="text-slate-400 mx-2">-</span>
+                              <span className="text-2xl font-bold text-emerald-300">{range.max}</span>
+                              <span className="text-slate-400 ml-2">PTS</span>
+                            </p>
+                            <p className="text-xs text-slate-400 text-center mt-2">
+                              Fourchette basée sur la volatilité
+                            </p>
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
         {/* Projections Section */}
         <div className="mb-6">
           <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
