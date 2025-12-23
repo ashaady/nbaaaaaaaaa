@@ -212,13 +212,13 @@ export function MatchPredictionModal({
   );
 
   const handleSaveMatch = useCallback(async () => {
-    if (!game || !prediction) return;
+    if (!game || !prediction || !homeTeamId || !awayTeamId) return;
 
     try {
       setIsSaving(true);
 
-      const homeTeamIdNum = typeof game.homeTeamId === "string" ? parseInt(game.homeTeamId) : game.homeTeamId;
-      const awayTeamIdNum = typeof game.awayTeamId === "string" ? parseInt(game.awayTeamId) : game.awayTeamId;
+      const homeTeamIdNum = typeof homeTeamId === "string" ? parseInt(homeTeamId) : homeTeamId;
+      const awayTeamIdNum = typeof awayTeamId === "string" ? parseInt(awayTeamId) : awayTeamId;
 
       if (!homeTeamIdNum || !awayTeamIdNum) {
         toast.error("Team IDs not available");
@@ -226,9 +226,10 @@ export function MatchPredictionModal({
       }
 
       // Fetch full match prediction with player data for saving
-      const fullPrediction = await nbaApi.getFullMatchPredictionWithAbsents(
-        homeTeamId,
-        awayTeamId,
+      // Using team IDs (not codes) for the full-match endpoint
+      const fullMatchData = await nbaApi.getFullMatchPredictionWithAbsents(
+        homeTeamIdNum,
+        awayTeamIdNum,
         homeMissingPlayers.map((p) => p.id),
         awayMissingPlayers.map((p) => p.id)
       );
@@ -255,8 +256,8 @@ export function MatchPredictionModal({
         home_team_id: homeTeamIdNum,
         away_team: game.awayTeam,
         away_team_id: awayTeamIdNum,
-        home_players: fullPrediction.home_players.map(formatPlayerStats),
-        away_players: fullPrediction.away_players.map(formatPlayerStats),
+        home_players: fullMatchData.home_players.map(formatPlayerStats),
+        away_players: fullMatchData.away_players.map(formatPlayerStats),
         winner_prediction: prediction.predicted_winner,
       };
 
