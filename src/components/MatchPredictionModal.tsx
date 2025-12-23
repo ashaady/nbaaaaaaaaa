@@ -336,6 +336,7 @@ export function MatchPredictionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* 1. RÉDUCTION DE LA TAILLE ICI (max-w-[850px] et max-h-[85vh]) */}
       <DialogContent className="sm:max-w-[850px] max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-blue-500/20">
+        <DialogDescription className="hidden">Match Analysis</DialogDescription>
 
         {/* Header - Padding réduit */}
         <DialogHeader className="border-b border-blue-500/20 px-6 py-4 bg-gradient-to-r from-slate-900/80 via-purple-950/30 to-slate-800/80 backdrop-blur-sm flex-shrink-0">
