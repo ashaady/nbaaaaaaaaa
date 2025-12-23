@@ -600,8 +600,8 @@ export const nbaApi = {
   },
 
   async getFullMatchPrediction(
-    homeTeamId: string,
-    awayTeamId: string
+    homeTeamId: string | number,
+    awayTeamId: string | number
   ): Promise<FullMatchPrediction> {
     const response = await fetch(`${API_BASE_URL}/predict/full-match/${homeTeamId}/${awayTeamId}`);
     if (!response.ok) throw new Error("Failed to fetch full match prediction");
