@@ -486,42 +486,19 @@ export function PlayerDetailsModal({
                   <CardContent className="pt-6">
                     <div className="space-y-4">
                       <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Lineup Synergy</p>
-                      <div className={`rounded-lg p-4 border-2 backdrop-blur-sm ${
-                        player.lineup_synergy.impact_pct > 0
-                          ? "bg-emerald-500/20 border-emerald-500/30"
-                          : player.lineup_synergy.impact_pct < 0
-                            ? "bg-red-500/20 border-red-500/30"
-                            : "bg-slate-700/20 border-slate-600/30"
-                      }`}>
-                        {player.lineup_synergy.impact_pct > 0 ? (
-                          <>
-                            <p className="text-2xl font-bold text-emerald-300 mb-2">
-                              🔥 +{player.lineup_synergy.impact_pct.toFixed(1)}% Boost
+                      {(() => {
+                        const synergyMsg = getLineupSynergyMessage(player.lineup_synergy.impact_pct, player.lineup_synergy.multiplier);
+                        return (
+                          <div className={`rounded-lg p-4 border-2 backdrop-blur-sm ${synergyMsg.color}`}>
+                            <p className={`text-2xl font-bold ${synergyMsg.textColor} mb-2`}>
+                              {synergyMsg.title}
                             </p>
-                            <p className="text-sm text-emerald-200/90">
-                              Exceptional lineup chemistry enhancing team performance
+                            <p className={`text-sm ${synergyMsg.textColor}/90`}>
+                              {synergyMsg.description}
                             </p>
-                          </>
-                        ) : player.lineup_synergy.impact_pct < 0 ? (
-                          <>
-                            <p className="text-2xl font-bold text-red-300 mb-2">
-                              ⚠️ {player.lineup_synergy.impact_pct.toFixed(1)}% Penalty
-                            </p>
-                            <p className="text-sm text-red-200/90">
-                              Spacing issues affecting team fit
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-2xl font-bold text-slate-300 mb-2">
-                              ⚖️ Neutral Chemistry
-                            </p>
-                            <p className="text-sm text-slate-300/90">
-                              Balanced team synergy
-                            </p>
-                          </>
-                        )}
-                      </div>
+                          </div>
+                        );
+                      })()}
                       <div className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-3 text-center">
                         <p className="text-xs text-slate-400 font-medium mb-1">Synergy Multiplier</p>
                         <p className="text-xl font-bold text-cyan-300">
