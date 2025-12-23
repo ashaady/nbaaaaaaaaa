@@ -235,8 +235,8 @@ export interface PlayerFullPrediction {
 }
 
 export interface MatchContext {
-  home_usage_boost: number;
-  away_usage_boost: number;
+  home_usage_boost?: number;
+  away_usage_boost?: number;
   home_absent_count?: number;
   away_absent_count?: number;
   status?: string;
