@@ -254,6 +254,17 @@ export function PlayerDetailsModal({
     return splitData[selectedStat] ?? null;
   };
 
+  const parseBoostPercentage = (boostStr?: string): number => {
+    if (!boostStr) return 0;
+    const match = boostStr.match(/([+-]?\d+\.?\d*)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
+  const shouldShowUsageSpikeBadge = (): boolean => {
+    const boostValue = parseBoostPercentage(player.context?.boost_applied);
+    return boostValue > 1.0;
+  };
+
   const getRecommendationColor = (advice: string | undefined, colorCode: string | undefined): string => {
     if (colorCode) {
       switch (colorCode.toLowerCase()) {
