@@ -47,6 +47,7 @@ import {
   AlertCircle,
   ChevronRight,
   BookmarkCheck,
+  TrendingUp,
 } from "lucide-react";
 import { getTeamCode } from "@/lib/teamMapping";
 import {
