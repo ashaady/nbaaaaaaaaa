@@ -254,6 +254,17 @@ export function PlayerDetailsModal({
     return splitData[selectedStat] ?? null;
   };
 
+  const parseBoostPercentage = (boostStr?: string): number => {
+    if (!boostStr) return 0;
+    const match = boostStr.match(/([+-]?\d+\.?\d*)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
+  const shouldShowUsageSpikeBadge = (): boolean => {
+    const boostValue = parseBoostPercentage(player.context?.boost_applied);
+    return boostValue > 1.0;
+  };
+
   const getRecommendationColor = (advice: string | undefined, colorCode: string | undefined): string => {
     if (colorCode) {
       switch (colorCode.toLowerCase()) {
@@ -370,19 +381,19 @@ export function PlayerDetailsModal({
         </div>
 
         {/* Context Banner */}
-        {historyData?.fatigue && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
+        {(historyData?.fatigue || shouldShowUsageSpikeBadge()) && (
+          <div className={`grid gap-4 mb-6 ${shouldShowUsageSpikeBadge() ? "grid-cols-3" : "grid-cols-2"}`}>
             <div className="backdrop-blur-md bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <Zap className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Fatigue Status</p>
                   <p className="text-sm font-semibold text-white mt-1">
-                    {historyData.fatigue.status}
+                    {historyData?.fatigue?.status || "N/A"}
                   </p>
                   <p className="text-xs text-slate-400 mt-2">
-                    {historyData.fatigue.last_min.toFixed(0)} min last game
-                    {historyData.fatigue.days_rest > 0 ? ` • ${historyData.fatigue.days_rest} day${historyData.fatigue.days_rest !== 1 ? 's' : ''} rest` : " • Back-to-back"}
+                    {historyData?.fatigue?.last_min.toFixed(0) || "0"} min last game
+                    {historyData?.fatigue?.days_rest && historyData.fatigue.days_rest > 0 ? ` • ${historyData.fatigue.days_rest} day${historyData.fatigue.days_rest !== 1 ? 's' : ''} rest` : " • Back-to-back"}
                   </p>
                 </div>
               </div>
@@ -399,6 +410,23 @@ export function PlayerDetailsModal({
                     </p>
                     <p className="text-xs text-slate-400 mt-2">
                       {player.team} vs {opponentTeamName}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {shouldShowUsageSpikeBadge() && (
+              <div className="backdrop-blur-md bg-emerald-950/40 border border-emerald-500/50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-emerald-300 uppercase tracking-wider font-semibold">Usage Spike</p>
+                    <p className="text-lg font-bold text-emerald-300 mt-1">
+                      🔥 {player.context?.boost_applied}
+                    </p>
+                    <p className="text-xs text-emerald-200/80 mt-2">
+                      Benefiting from redistributed possessions
                     </p>
                   </div>
                 </div>

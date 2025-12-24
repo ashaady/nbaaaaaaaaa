@@ -47,6 +47,7 @@ import {
   AlertCircle,
   ChevronRight,
   BookmarkCheck,
+  TrendingUp,
 } from "lucide-react";
 import { getTeamCode } from "@/lib/teamMapping";
 import {
@@ -294,6 +295,27 @@ export function MatchPredictionModal({
     return winner === game?.homeTeam
       ? "from-purple-600/20 to-purple-500/10"
       : "from-amber-600/20 to-amber-500/10";
+  };
+
+  const parseBoostPercentage = (boostStr?: string): number => {
+    if (!boostStr) return 0;
+    const match = boostStr.match(/([+-]?\d+\.?\d*)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
+  const renderBoostIndicator = (boostStr?: string) => {
+    const boostValue = parseBoostPercentage(boostStr);
+    if (boostValue <= 5 || !boostStr) return null;
+
+    return (
+      <div
+        className="inline-flex items-center gap-1 ml-1 px-2 py-0.5 rounded bg-emerald-500/30 border border-emerald-500/50"
+        title="Usage Boosted due to absences"
+      >
+        <TrendingUp className="h-3 w-3 text-emerald-400" />
+        <span className="text-[9px] font-semibold text-emerald-300">{boostStr}</span>
+      </div>
+    );
   };
 
   const renderFatigueSection = (
@@ -951,7 +973,10 @@ export function MatchPredictionModal({
                                       {player.player}
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-amber-400 py-2 px-2 text-right">
-                                      {player.predicted_stats?.PTS?.toFixed(1) || "-"}
+                                      <div className="flex items-center justify-end">
+                                        <span>{player.predicted_stats?.PTS?.toFixed(1) || "-"}</span>
+                                        {renderBoostIndicator(player.context?.boost_applied)}
+                                      </div>
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-cyan-400 py-2 px-2 text-right">
                                       {player.predicted_stats?.REB?.toFixed(1) || "-"}
@@ -992,7 +1017,10 @@ export function MatchPredictionModal({
                                       {player.player}
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-amber-400 py-2 px-2 text-right">
-                                      {player.predicted_stats?.PTS?.toFixed(1) || "-"}
+                                      <div className="flex items-center justify-end">
+                                        <span>{player.predicted_stats?.PTS?.toFixed(1) || "-"}</span>
+                                        {renderBoostIndicator(player.context?.boost_applied)}
+                                      </div>
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-cyan-400 py-2 px-2 text-right">
                                       {player.predicted_stats?.REB?.toFixed(1) || "-"}
