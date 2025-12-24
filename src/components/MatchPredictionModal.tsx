@@ -1017,7 +1017,10 @@ export function MatchPredictionModal({
                                       {player.player}
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-amber-400 py-2 px-2 text-right">
-                                      {player.predicted_stats?.PTS?.toFixed(1) || "-"}
+                                      <div className="flex items-center justify-end">
+                                        <span>{player.predicted_stats?.PTS?.toFixed(1) || "-"}</span>
+                                        {renderBoostIndicator(player.context?.boost_applied)}
+                                      </div>
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-cyan-400 py-2 px-2 text-right">
                                       {player.predicted_stats?.REB?.toFixed(1) || "-"}
