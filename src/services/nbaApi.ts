@@ -198,6 +198,19 @@ export interface PlayerContext {
   reasoning?: string;
 }
 
+export interface RedistributionAnalysis {
+  home: {
+    absents: number;
+    beneficiaries: number;
+    top_boost: number;
+  };
+  away: {
+    absents: number;
+    beneficiaries: number;
+    top_boost: number;
+  };
+}
+
 export interface Archetype {
   type: string;
   is_star: boolean;
