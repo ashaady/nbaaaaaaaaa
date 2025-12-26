@@ -1014,11 +1014,20 @@ export function MatchPredictionModal({
                                 {fullPrediction.home_players.map((player, idx) => (
                                   <TableRow
                                     key={`home-${player.player_id}`}
-                                    className="border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors"
+                                    className={`border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors ${
+                                      isUpdating ? "animate-player-update" : ""
+                                    }`}
                                     onClick={() => handlePlayerClick(player, "home")}
                                   >
-                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2 truncate">
-                                      {player.player}
+                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2">
+                                      <div className="flex items-center gap-1.5 truncate">
+                                        <span className="truncate">{player.player}</span>
+                                        {player.usage_boost_applied && player.usage_boost_applied > 1.0 && (
+                                          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/30 border border-emerald-500/50 text-[8px] font-bold text-emerald-300 whitespace-nowrap animate-boost-pulse flex-shrink-0">
+                                            +{Math.round((player.usage_boost_applied - 1) * 100)}%
+                                          </span>
+                                        )}
+                                      </div>
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-amber-400 py-2 px-2 text-right">
                                       <div className="flex items-center justify-end">
@@ -1058,11 +1067,20 @@ export function MatchPredictionModal({
                                 {fullPrediction.away_players.map((player, idx) => (
                                   <TableRow
                                     key={`away-${player.player_id}`}
-                                    className="border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors"
+                                    className={`border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors ${
+                                      isUpdating ? "animate-player-update" : ""
+                                    }`}
                                     onClick={() => handlePlayerClick(player, "away")}
                                   >
-                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2 truncate">
-                                      {player.player}
+                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2">
+                                      <div className="flex items-center gap-1.5 truncate">
+                                        <span className="truncate">{player.player}</span>
+                                        {player.usage_boost_applied && player.usage_boost_applied > 1.0 && (
+                                          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/30 border border-emerald-500/50 text-[8px] font-bold text-emerald-300 whitespace-nowrap animate-boost-pulse flex-shrink-0">
+                                            +{Math.round((player.usage_boost_applied - 1) * 100)}%
+                                          </span>
+                                        )}
+                                      </div>
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-amber-400 py-2 px-2 text-right">
                                       <div className="flex items-center justify-end">
