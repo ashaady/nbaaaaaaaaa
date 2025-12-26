@@ -949,7 +949,46 @@ export function MatchPredictionModal({
                         </div>
                       </div>
                     ) : fullPrediction && (fullPrediction.home_players.length > 0 || fullPrediction.away_players.length > 0) ? (
-                      <Tabs defaultValue="home" className="w-full">
+                      <>
+                        {/* Redistribution Banner */}
+                        {(fullPrediction.redistribution_analysis?.home?.absents > 0 || fullPrediction.redistribution_analysis?.away?.absents > 0) && (
+                          <div className="grid grid-cols-2 gap-3 mb-4">
+                            {fullPrediction.redistribution_analysis?.home?.absents > 0 && (
+                              <div className="bg-gradient-to-r from-blue-600/20 to-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-start gap-2">
+                                <RotateCcw className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                                <div className="text-[10px] leading-relaxed">
+                                  <div className="font-bold text-blue-300">
+                                    {fullPrediction.redistribution_analysis.home.absents} absent {fullPrediction.redistribution_analysis.home.absents === 1 ? "player" : "players"}
+                                  </div>
+                                  <div className="text-blue-300/70">
+                                    Redistributed to {fullPrediction.redistribution_analysis.home.beneficiaries} {fullPrediction.redistribution_analysis.home.beneficiaries === 1 ? "player" : "players"}
+                                  </div>
+                                  <div className="text-blue-300/70">
+                                    Max boost: <span className="font-bold text-emerald-400">+{Math.round((fullPrediction.redistribution_analysis.home.top_boost - 1) * 100)}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {fullPrediction.redistribution_analysis?.away?.absents > 0 && (
+                              <div className="bg-gradient-to-r from-amber-600/20 to-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2">
+                                <RotateCcw className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                                <div className="text-[10px] leading-relaxed">
+                                  <div className="font-bold text-amber-300">
+                                    {fullPrediction.redistribution_analysis.away.absents} absent {fullPrediction.redistribution_analysis.away.absents === 1 ? "player" : "players"}
+                                  </div>
+                                  <div className="text-amber-300/70">
+                                    Redistributed to {fullPrediction.redistribution_analysis.away.beneficiaries} {fullPrediction.redistribution_analysis.away.beneficiaries === 1 ? "player" : "players"}
+                                  </div>
+                                  <div className="text-amber-300/70">
+                                    Max boost: <span className="font-bold text-emerald-400">+{Math.round((fullPrediction.redistribution_analysis.away.top_boost - 1) * 100)}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <Tabs defaultValue="home" className="w-full">
                         <TabsList className="grid w-full grid-cols-2 h-7 mb-3">
                           <TabsTrigger value="home" className="text-[10px] h-full">
                             {game?.homeTeam} ({fullPrediction.home_players.length})
@@ -1047,6 +1086,7 @@ export function MatchPredictionModal({
                           </div>
                         </TabsContent>
                       </Tabs>
+                      </>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground text-xs">
                         Player data unavailable
