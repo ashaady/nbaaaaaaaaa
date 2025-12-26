@@ -92,6 +92,7 @@ export function MatchPredictionModal({
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerFullPrediction | null>(null);
   const [playerModalOpen, setPlayerModalOpen] = useState(false);
   const [modalTeam, setModalTeam] = useState<"home" | "away">("home");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Team codes for predictMatch endpoint (/predict/match/{homeCode}/{awayCode})
   const homeCode = game ? getTeamCode(game.homeTeam) : "";
