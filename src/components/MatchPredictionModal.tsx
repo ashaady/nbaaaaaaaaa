@@ -94,6 +94,13 @@ export function MatchPredictionModal({
   const [modalTeam, setModalTeam] = useState<"home" | "away">("home");
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Trigger animation when predictions update
+  useEffect(() => {
+    setIsUpdating(true);
+    const timer = setTimeout(() => setIsUpdating(false), 500);
+    return () => clearTimeout(timer);
+  }, [fullPrediction]);
+
   // Team codes for predictMatch endpoint (/predict/match/{homeCode}/{awayCode})
   const homeCode = game ? getTeamCode(game.homeTeam) : "";
   const awayCode = game ? getTeamCode(game.awayTeam) : "";
