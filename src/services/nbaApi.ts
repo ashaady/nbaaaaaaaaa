@@ -198,6 +198,19 @@ export interface PlayerContext {
   reasoning?: string;
 }
 
+export interface RedistributionAnalysis {
+  home: {
+    absents: number;
+    beneficiaries: number;
+    top_boost: number;
+  };
+  away: {
+    absents: number;
+    beneficiaries: number;
+    top_boost: number;
+  };
+}
+
 export interface Archetype {
   type: string;
   is_star: boolean;
@@ -233,6 +246,7 @@ export interface PlayerFullPrediction {
     impact_pct: number;
   };
   volatility?: number;
+  usage_boost_applied?: number;
 }
 
 export interface MatchContext {
@@ -255,6 +269,7 @@ export interface InteractiveMatchPrediction {
   match_context: MatchContext;
   home_players: PlayerFullPrediction[];
   away_players: PlayerFullPrediction[];
+  redistribution_analysis?: RedistributionAnalysis;
 }
 
 export interface RecentFormAvg {

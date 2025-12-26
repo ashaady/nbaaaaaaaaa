@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,7 @@ import {
   ChevronRight,
   BookmarkCheck,
   TrendingUp,
+  RotateCcw,
 } from "lucide-react";
 import { getTeamCode } from "@/lib/teamMapping";
 import {
@@ -91,6 +92,14 @@ export function MatchPredictionModal({
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerFullPrediction | null>(null);
   const [playerModalOpen, setPlayerModalOpen] = useState(false);
   const [modalTeam, setModalTeam] = useState<"home" | "away">("home");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Trigger animation when predictions update
+  useEffect(() => {
+    setIsUpdating(true);
+    const timer = setTimeout(() => setIsUpdating(false), 500);
+    return () => clearTimeout(timer);
+  }, [fullPrediction]);
 
   // Team codes for predictMatch endpoint (/predict/match/{homeCode}/{awayCode})
   const homeCode = game ? getTeamCode(game.homeTeam) : "";
@@ -940,7 +949,46 @@ export function MatchPredictionModal({
                         </div>
                       </div>
                     ) : fullPrediction && (fullPrediction.home_players.length > 0 || fullPrediction.away_players.length > 0) ? (
-                      <Tabs defaultValue="home" className="w-full">
+                      <>
+                        {/* Redistribution Banner */}
+                        {(fullPrediction.redistribution_analysis?.home?.absents > 0 || fullPrediction.redistribution_analysis?.away?.absents > 0) && (
+                          <div className="grid grid-cols-2 gap-3 mb-4">
+                            {fullPrediction.redistribution_analysis?.home?.absents > 0 && (
+                              <div className="bg-gradient-to-r from-blue-600/20 to-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-start gap-2">
+                                <RotateCcw className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                                <div className="text-[10px] leading-relaxed">
+                                  <div className="font-bold text-blue-300">
+                                    {fullPrediction.redistribution_analysis.home.absents} absent {fullPrediction.redistribution_analysis.home.absents === 1 ? "player" : "players"}
+                                  </div>
+                                  <div className="text-blue-300/70">
+                                    Redistributed to {fullPrediction.redistribution_analysis.home.beneficiaries} {fullPrediction.redistribution_analysis.home.beneficiaries === 1 ? "player" : "players"}
+                                  </div>
+                                  <div className="text-blue-300/70">
+                                    Max boost: <span className="font-bold text-emerald-400">+{Math.round((fullPrediction.redistribution_analysis.home.top_boost - 1) * 100)}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {fullPrediction.redistribution_analysis?.away?.absents > 0 && (
+                              <div className="bg-gradient-to-r from-amber-600/20 to-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2">
+                                <RotateCcw className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                                <div className="text-[10px] leading-relaxed">
+                                  <div className="font-bold text-amber-300">
+                                    {fullPrediction.redistribution_analysis.away.absents} absent {fullPrediction.redistribution_analysis.away.absents === 1 ? "player" : "players"}
+                                  </div>
+                                  <div className="text-amber-300/70">
+                                    Redistributed to {fullPrediction.redistribution_analysis.away.beneficiaries} {fullPrediction.redistribution_analysis.away.beneficiaries === 1 ? "player" : "players"}
+                                  </div>
+                                  <div className="text-amber-300/70">
+                                    Max boost: <span className="font-bold text-emerald-400">+{Math.round((fullPrediction.redistribution_analysis.away.top_boost - 1) * 100)}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <Tabs defaultValue="home" className="w-full">
                         <TabsList className="grid w-full grid-cols-2 h-7 mb-3">
                           <TabsTrigger value="home" className="text-[10px] h-full">
                             {game?.homeTeam} ({fullPrediction.home_players.length})
@@ -966,11 +1014,20 @@ export function MatchPredictionModal({
                                 {fullPrediction.home_players.map((player, idx) => (
                                   <TableRow
                                     key={`home-${player.player_id}`}
-                                    className="border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors"
+                                    className={`border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors ${
+                                      isUpdating ? "animate-player-update" : ""
+                                    }`}
                                     onClick={() => handlePlayerClick(player, "home")}
                                   >
-                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2 truncate">
-                                      {player.player}
+                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2">
+                                      <div className="flex items-center gap-1.5 truncate">
+                                        <span className="truncate">{player.player}</span>
+                                        {player.usage_boost_applied && player.usage_boost_applied > 1.0 && (
+                                          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/30 border border-emerald-500/50 text-[8px] font-bold text-emerald-300 whitespace-nowrap animate-boost-pulse flex-shrink-0">
+                                            +{Math.round((player.usage_boost_applied - 1) * 100)}%
+                                          </span>
+                                        )}
+                                      </div>
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-amber-400 py-2 px-2 text-right">
                                       <div className="flex items-center justify-end">
@@ -1010,11 +1067,20 @@ export function MatchPredictionModal({
                                 {fullPrediction.away_players.map((player, idx) => (
                                   <TableRow
                                     key={`away-${player.player_id}`}
-                                    className="border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors"
+                                    className={`border-indigo-500/20 hover:bg-indigo-950/20 cursor-pointer transition-colors ${
+                                      isUpdating ? "animate-player-update" : ""
+                                    }`}
                                     onClick={() => handlePlayerClick(player, "away")}
                                   >
-                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2 truncate">
-                                      {player.player}
+                                    <TableCell className="text-[9px] font-semibold text-indigo-200 py-2 px-2">
+                                      <div className="flex items-center gap-1.5 truncate">
+                                        <span className="truncate">{player.player}</span>
+                                        {player.usage_boost_applied && player.usage_boost_applied > 1.0 && (
+                                          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/30 border border-emerald-500/50 text-[8px] font-bold text-emerald-300 whitespace-nowrap animate-boost-pulse flex-shrink-0">
+                                            +{Math.round((player.usage_boost_applied - 1) * 100)}%
+                                          </span>
+                                        )}
+                                      </div>
                                     </TableCell>
                                     <TableCell className="text-[9px] font-bold text-amber-400 py-2 px-2 text-right">
                                       <div className="flex items-center justify-end">
@@ -1038,6 +1104,7 @@ export function MatchPredictionModal({
                           </div>
                         </TabsContent>
                       </Tabs>
+                      </>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground text-xs">
                         Player data unavailable
