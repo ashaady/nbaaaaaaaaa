@@ -246,6 +246,7 @@ export interface PlayerFullPrediction {
     impact_pct: number;
   };
   volatility?: number;
+  usage_boost_applied?: number;
 }
 
 export interface MatchContext {
