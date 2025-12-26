@@ -269,6 +269,7 @@ export interface InteractiveMatchPrediction {
   match_context: MatchContext;
   home_players: PlayerFullPrediction[];
   away_players: PlayerFullPrediction[];
+  redistribution_analysis?: RedistributionAnalysis;
 }
 
 export interface RecentFormAvg {
